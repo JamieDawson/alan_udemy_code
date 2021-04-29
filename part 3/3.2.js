@@ -43,8 +43,14 @@ let checkout = context(() => {
 
 	intent("My address is $(LOC)", (p) => {
 		p.play(`Thank you, we will deliver your order to ${p.LOC.value}`);
+		p.play("Any comments?");
+	});
+
+	intent("My comment is $(COMMENT* (.+))", (p) => {
+		p.userData.comment = p.COMMENT.value;
+		p.play("Thank you, will take a note");
 		p.play(
-			`You have ordered: ${p.userData.coffee} and ${p.userData.dessert}. Is your order correct?`
+			`You have ordered: ${p.userData.coffee} and ${p.userData.dessert}. Your comment is: ${p.userData.comment}. Is your order correct?`
 		);
 		p.then(confirmOrder);
 	});
@@ -63,6 +69,3 @@ let confirmOrder = context(() => {
 
 	fallback("You have to say Yes or No");
 });
-
-//test
-//test
