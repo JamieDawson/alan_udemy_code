@@ -1,6 +1,10 @@
 let coffeeSlot = "cappuccino|latte|americano";
 let dessertSlot = "cheesecake|brownie|apple pie";
 
+intent(noctx, "What does this app do?", (p) => {
+	p.play("This is a coffee ordering app");
+});
+
 intent("What can I get here?", (p) => {
 	p.play("You can order a coffee and a dessert");
 });
@@ -10,6 +14,7 @@ intent(
 	`One $(COFFEE ${coffeeSlot}), (please|)`,
 	`I (need|want) (a|an) $(COFFEE ${coffeeSlot})`,
 	(p) => {
+		p.userData.coffee = p.COFFEE.value;
 		p.play(`Adding one ${p.COFFEE.value} to your order`, "Sure", "Here you go");
 		p.play("Please choose a dessert");
 		p.then(orderDessert);
@@ -22,6 +27,7 @@ let orderDessert = context(() => {
 		`One $(DESSERT ${dessertSlot}), (please|)`,
 		`I (need|want) (a|an) $(DESSERT ${dessertSlot})`,
 		(p) => {
+			p.userData.dessert = p.DESSERT.value;
 			p.play(`Your ${p.DESSERT.value} is added`, "Sure", "Here you go");
 			p.play("Please provide your name");
 			p.then(checkout);
@@ -37,7 +43,9 @@ let checkout = context(() => {
 
 	intent("My address is $(LOC)", (p) => {
 		p.play(`Thank you, we will deliver your order to ${p.LOC.value}`);
-		p.play("Is your order correct?");
+		p.play(
+			`You have ordered: ${p.userData.coffee} and ${p.userData.dessert}. Is your order correct?`
+		);
 		p.then(confirmOrder);
 	});
 });
@@ -45,9 +53,13 @@ let checkout = context(() => {
 let confirmOrder = context(() => {
 	intent("Yes, (it is correct|)", (p) => {
 		p.play("Thank you");
+		p.resolve();
 	});
 
 	intent("No, (I want to change it|)", (p) => {
 		p.play("Sure, take your time");
+		p.resolve();
 	});
+
+	fallback("You have to say Yes or No");
 });
