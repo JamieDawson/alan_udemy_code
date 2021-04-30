@@ -72,7 +72,12 @@
 					<input type="text" id="address" name="address" class="form-field" />
 					<label for="comment" class="form-label">Comments</label>
 					<textarea id="comment" form="usrform" class="form-field"></textarea>
-					<input type="button" value="Purchase" class="form-btn" />
+					<input
+						type="button"
+						value="Purchase"
+						class="form-btn"
+						onClick="sendData()"
+					/>
 				</form>
 			</div>
 		</div>
@@ -86,21 +91,33 @@
 				key:
 					"58da3702f6a08974428ff564ba5a7a162e956eca572e1d8b807a3e2338fdd0dc/stage",
 				onCommand: function (commandData) {
-					if (commandData.command === "go:back") {
-						//call client code that will react on the received command
+					if (commandData.command === "highlight") {
+						highlightProduct(commandData.item);
+					} else if (commandData.command === "addName") {
+						document.getElementById("name").value = commandData.name;
 					}
 				},
+				onButtonState: async function (state) {
+					if (state === "ONLINE") {
+						await alanBtnInstance.activate();
+						alanBtnInstance.playText("Hey, this is alan");
+					}
+				},
+
 				rootEl: document.getElementById("alan-btn"),
 			});
 		</script>
 		<script>
 			let coffee = "";
 			let dessert = "";
+			let order = {};
 
 			function setCoffee(coffee) {
 				// Adding the order to the cart
 				document.getElementById("coffee").innerHTML =
 					coffee.charAt(0).toUpperCase() + coffee.slice(1);
+				order["coffee"] = coffee;
+				alanBtnInstance.setVisualState({ order });
 
 				// Highlighting tiles
 				let item = coffee.toLowerCase();
@@ -111,6 +128,9 @@
 				// Adding the order to the cart
 				document.getElementById("dessert").innerHTML =
 					dessert.charAt(0).toUpperCase() + dessert.slice(1);
+
+				order["dessert"] = dessert;
+				alanBtnInstance.setVisualState({ order });
 
 				// Highlighting tiles
 				let item = dessert.replace(/\s+/g, "-").toLowerCase();
@@ -125,6 +145,23 @@
 					);
 					el.classList.add("highlighted");
 				}
+			}
+
+			function sendData() {
+				alanBtnInstance.activate();
+				alanBtnInstance.callProjectApi(
+					"getOrder",
+					{
+						coffee: order.coffee,
+						dessert: order.dessert,
+						name: document.getElementById("name").value,
+						address: document.getElementById("address").value,
+						comment: document.getElementById("comment").value,
+					},
+					function (error, result) {
+						console.log(error);
+					}
+				);
 			}
 		</script>
 	</body>
